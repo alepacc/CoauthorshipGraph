@@ -12,6 +12,9 @@ import matplotlib.pyplot as plt
 from networkx import Graph
 from networkx.drawing.nx_agraph import graphviz_layout
 import csv
+import re
+from xml.sax.saxutils import unescape
+
 
 def get_id_author(authorName):
     autID = {}
@@ -74,7 +77,7 @@ def extractPublication(json):
     for i in range(len(publ_access)):
         publ_data = publ_access[i]
         id_publ = publ_data['@id']
-        title = publ_data['info']['title']
+        title = unescape(publ_data['info']['title'], entities={r"&apos;": r"'", r"&quot;": r'"'})
         publ_info = publ_data['info']
 
         if 'authors' in publ_info:
@@ -87,10 +90,10 @@ def extractPublication(json):
         elif type(list()) == type(authors_access):  # list
             for j in range(len(authors_access)):
                 aut = authors_access[j]
-                publ_dict[cnt] = {'publ_id': publ_data['@id'], 'title': title, 'aut_id': aut['@pid'],'aut_id': aut['@pid'], 'author': aut['text']}
+                publ_dict[cnt] = {'publ_id': publ_data['@id'], 'title': title, 'aut_id': aut['@pid'],'aut_id': aut['@pid'], 'author': unescape(aut['text'], entities={r"&apos;": r"'", r"&quot;": r'"'})}
                 cnt += 1
         elif type(dict()) == type(authors_access):  # dictionary
-            publ_dict[cnt] = {'publ_id': publ_data['@id'], 'title': title, 'aut_id': authors_access['@pid'], 'aut_id': authors_access['@pid'], 'author': authors_access['text']}
+            publ_dict[cnt] = {'publ_id': publ_data['@id'], 'title': title, 'aut_id': authors_access['@pid'], 'aut_id': authors_access['@pid'], 'author': unescape(authors_access['text'], entities={r"&apos;": r"'", r"&quot;": r'"'})}
             cnt += 1
 
     return publ_dict
@@ -105,7 +108,6 @@ def getEdges(json):
     for i in range(len(publ_access)):
         publ_data = publ_access[i]
         id_publ = publ_data['@id']
-        title = publ_data['info']['title']
         publ_info = publ_data['info']
 
         if 'authors' in publ_info:
@@ -123,21 +125,21 @@ def getEdges(json):
                 co_aut.append(aut['@pid'])
             cnt += length
             for k in itertools.combinations(co_aut, 2):
-                edges[pos] = (k[0], k[1], publ_dict[cnt - 1]['publ_id'], publ_dict[cnt - 1]['title'])
+                edges[pos] = (k[0], k[1], publ_dict[cnt - 1]['publ_id'], unescape(publ_dict[cnt - 1]['title'], entities={r"&apos;": r"'", r"&quot;": r'"'}))
                 pos += 1
-                # G.add_edge(k[0], k[1], publ_id=publ_dict[cnt - 1]['publ_id'])#, title=publ_dict[cnt - 1]['title'])
         elif type(dict()) == type(authors_access):  # dictionary
-            ######## arco con se stesso, publicazione con singolo autore!!!!!!!!!----------
+            ######## arco con se stesso, publicazione con singolo autore
             cnt += 1
-            edges[pos] = (authors_access['@pid'], authors_access['@pid'], publ_dict[cnt-1]['publ_id'], publ_dict[cnt - 1]['title'])
+            edges[pos] = (authors_access['@pid'], authors_access['@pid'], publ_dict[cnt-1]['publ_id'], unescape(publ_dict[cnt - 1]['title'], entities={r"&apos;": r"'", r"&quot;": r'"'}))
             pos += 1
-            # G.add_edge(authors_access['@pid'], authors_access['@pid'])#, publ_id=publ_dict[cnt - 1]['publ_id'], title=publ_dict[cnt - 1]['title'])
+
     return edges
 
-################ MAIN ##############
+############ MAIN ##############
 with open("dataset.json") as access_json:
     data = json.load(access_json)
 
+# extrct data from json
 publ_dict = extractPublication(data);
 
 ### AUTHORS DICTIONARY
@@ -154,7 +156,7 @@ for key, value in authors.items():
 with open('nodes.csv', 'w') as f:
     f.write("Id,Label\n")
     for key, val in author_dict.items():
-        f.write("%s,%s\n"%(val['aut_id'],val['author']))
+        f.write("%s,%s\n"%(val['aut_id'], val['author']))
 
 #### EDGE dictionary
 edges_dict = getEdges(data)
@@ -165,8 +167,44 @@ with open('edges.csv', 'w') as f:
     for key, val in edges_dict.items():
         f.write("%s,%s,%s,\"%s\"\n"%(val[0],val[1],val[2],val[3]))
 
+### CREATE CSV Node Keyword
+#read csv, and split on "," the line
+csv_file = csv.reader(open('edges.csv', "r"), delimiter=",")
+f = open('keywords.csv', 'w')
+f.write("Node,Keyword\n")
+# Skip header
+next(csv_file)
+#loop through csv list
+for row in csv_file:
+    # same node
+    if(row[0] == row[1]):
+        result = re.findall('[A-Z][a-z][a-z][a-z]+',  row[3], re.IGNORECASE)
+        for r in result:
+            f.write("%s,%s\n"%(row[0],r))
+    else:
+        result = re.findall('[A-Z][a-z][a-z][a-z]+', row[3], re.IGNORECASE)
+        for r in result:
+            f.write("%s,%s\n%s,%s\n" % (row[0], r, row[1], r))
+f.close()
 
-######### GRAPH ##########
+### Publication DICTIONARY
+publication = {}
+for key, value in publ_dict.items():
+    publication[key] = {'publ_id': value['publ_id'], 'title': value['title']}
+# remove duplicate authors in dictionary
+publication_list = {}
+for key, value in publication.items():
+    if value not in publication_list.values():
+        publication_list[key] = value
+
+### CREATE CSV Publication
+with open('publication.csv', 'w') as f:
+    f.write("publ_id,title\n")
+    for val in publication_list.values():
+        f.write("%s,\"%s\"\n"%(val['publ_id'],val['title']))
+
+
+### GRAPH ###
 G = nx.Graph()
 
 #### add nodes in graph
@@ -185,10 +223,12 @@ for k, v in edges_dict.items():
 
 print("\n" + nx.info(G) + "\n")
 
+
 h_dis = hop_distance(G, '183/0347', '64/6125')
 # dis = distance('183/0347', '64/6125')
 print(h_dis)
 
+### Drawing graph
 print("drawing.......")
 # pos = graphviz_layout(G, prog="twopi", args="")
 # plt.figure(figsize=(8, 8))
@@ -197,5 +237,6 @@ print("drawing.......")
 # plt.axis("equal")
 # plt.show()
 #
+
 
 
