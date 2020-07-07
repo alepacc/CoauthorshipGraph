@@ -228,15 +228,21 @@ h_dis = hop_distance(G, '183/0347', '64/6125')
 # dis = distance('183/0347', '64/6125')
 print(h_dis)
 
-### Drawing graph
-print("drawing.......")
+### Drawing graph with NetworkX
+# print("drawing.......")
 # pos = graphviz_layout(G, prog="twopi", args="")
 # plt.figure(figsize=(8, 8))
 # labels = nx.get_edge_attributes(G, 'publ_id')
 # nx.draw(G, pos, node_size=20, alpha=0.4, node_color=range(2945), with_labels=False)
 # plt.axis("equal")
 # plt.show()
-#
+
+#### Output Terminal
+print("Insert keyword: ")
+keys = input("prompt")
+result = []
+result = re.findall('[A-Z][a-z][a-z][a-z]+', keys)
+print(result)
 
 
 
