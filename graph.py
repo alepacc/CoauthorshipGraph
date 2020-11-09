@@ -2,12 +2,8 @@
 # !/usr/bin/python3
 
 import json
-from os.path import expanduser
 import itertools
-from collections import defaultdict
-import math
 import networkx as nx
-import heapq
 import matplotlib.pyplot as plt
 from networkx import Graph
 from networkx.drawing.nx_agraph import graphviz_layout
@@ -27,7 +23,7 @@ def distance(G, start, end):
         # print("There is no path between the nodes")
 
 
-### Extract publication by Json file of graph DBLP
+# Extract publication by Json file of graph DBLP
 def extract_publication(json):
     publ_dict = {}
     publ_access = json['result']['hits']['hit']
@@ -62,7 +58,7 @@ def extract_publication(json):
     return publ_dict
 
 
-#### Create list of the edges
+# Create list of the edges
 def get_edges(data_json):
     edges = {}
     cnt = 0
@@ -90,8 +86,7 @@ def get_edges(data_json):
                 edges[pos] = (pair[0], pair[1], publ_dict[cnt - 1]['publ_id'],
                               unescape(publ_dict[cnt - 1]['title'], entities={r"&apos;": r"'", r"&quot;": r'"'}))
                 pos += 1
-        elif type(dict()) == type(authors_access):  # dictionary
-            ######## arco con se stesso, publicazione con singolo autore
+        elif type(dict()) == type(authors_access):  # publication with single author
             cnt += 1
             edges[pos] = (authors_access['@pid'], authors_access['@pid'], publ_dict[cnt - 1]['publ_id'],
                           unescape(publ_dict[cnt - 1]['title'], entities={r"&apos;": r"'", r"&quot;": r'"'}))
@@ -100,7 +95,7 @@ def get_edges(data_json):
     return edges
 
 
-### CREATE  Keyword
+# ------------ CREATE Keyword ------------
 def get_keywords(csv_file):
     f = open('keywords.csv', 'w')
     f.write("Node,Keyword\n")
@@ -138,50 +133,50 @@ def get_keywords(csv_file):
     return keywords
 
 
-############ MAIN ##############
+### ------------ MAIN ------------ ###
 with open("dataset.json") as access_json:
     data = json.load(access_json)
 
 # extrct data from json
-publ_dict = extract_publication(data);
+publ_dict = extract_publication(data)
 
-### AUTHORS DICTIONARY
+# ------------ AUTHORS DICTIONARY ------------
 author_dict = {}
 for key, value in publ_dict.items():
     author_dict[value['aut_id']] = {'aut_id': value['aut_id'], 'author': value['author']}
 
 
-### CREATE CSV file with node id and label
+# CREATE CSV file with node id and label
 with open('nodes.csv', 'w') as f:
     f.write("Id,Label\n")
     for key, val in author_dict.items():
         f.write("%s,%s\n" % (val['aut_id'], val['author']))
 
-#### EDGE dictionary
+# ------------ EDGE dictionary ------------
 edges_dict = get_edges(data)
 
-### CREATE CSV file edges
+# CREATE CSV file edges
 with open('edges.csv', 'w') as f:
     f.write("Source,Target,Label,Publication_name\n")
     for key, val in edges_dict.items():
         f.write("%s,%s,%s,\"%s\"\n" % (val[0], val[1], val[2], val[3]))
 
-### Publication DICTIONARY
+# ------------ Publication DICTIONARY ------------
 publication = {}
 for key, value in publ_dict.items():
     publication[value['publ_id']] = {'publ_id': value['publ_id'], 'title': value['title']}
 
 
-### CREATE CSV Publication
+# CREATE CSV Publication
 with open('publication.csv', 'w') as f:
     f.write("publ_id,title\n")
     for val in publication.values():
         f.write("%s,\"%s\"\n" % (val['publ_id'], val['title']))
 
-### GRAPH ###
+# ------------ GRAPH ------------
 G = nx.Graph()
 
-#### add nodes in graph
+# add nodes in graph
 for i in range(len(author_dict)):
     try:
         G.add_node(author_dict[i]['aut_id'], id=author_dict[i]['aut_id'], author=author_dict[i]['author'])
@@ -189,14 +184,14 @@ for i in range(len(author_dict)):
         pass
 
 
-#### add edges in graph
+# add edges in graph
 for k, v in edges_dict.items():
     try:
         G.add_edge(v[0], v[1], publ_id=v[2], title=v[3])
     except:
         pass
 
-#### KEYWORDS
+# ------------ KEYWORDS ------------
 # read csv, and split on "," the line
 edges_file = csv.reader(open('edges.csv', "r"), delimiter=",")
 keywords_dict = get_keywords(edges_file)
@@ -215,11 +210,9 @@ for i in range(len(keywords_dict)):
 
 print("\n" + nx.info(G) + "\n")
 
-# h_dis = hop_distance(G, '183/0347', '64/6125')
-# # dis = distance('183/0347', '64/6125')
-# print(h_dis)
 
-### Drawing graph with NetworkX
+
+# ------------ Drawing graph with NetworkX ------------
 # print("drawing.......")
 # pos = graphviz_layout(G, prog="twopi", args="")
 # plt.figure(figsize=(8, 8))

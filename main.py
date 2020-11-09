@@ -1,18 +1,28 @@
 import time
 import re
-import csv
 import itertools
-from collections import Counter
+
+from networkx import all_neighbors
+from nltk.corpus import wordnet
 
 import graph as g
 
 
-###### KEYWORDS
-#### Input Keywords
+def find(word):
+    synonyms = []
+    for syn in wordnet.synsets(word):
+        for l in syn.lemmas():
+            synonyms.append(l.name())
+    # print(set(synonyms))
+    return synonyms
+
+
+# ------------ KEYWORDS ------------
+# Input Keywords
 keys = input('Insert keyword or title of publication: ')
 keywords_input = re.findall('(?!from|with)[A-Z][a-z][a-z][a-z]+', keys, re.IGNORECASE)
 
-print(keywords_input)
+print("keywors->", keywords_input, "\n")
 
 # groups of nodes for each keywords
 groups = {}
@@ -22,20 +32,31 @@ for k in keywords_input:
         if key[1] == k:
             node.append(key[0])
     groups[k] = {'nodes': node}
+    if not groups[k]['nodes']:
+        my_list = find(k)
+        my_list = list(dict.fromkeys(my_list))
+        groups[k] = {'nodes': my_list}
 
 for k, v in groups.items():
     print(k, groups[k])
 
+# count frequency, node_key save keywords for each node
+node_key = {}
 freq = {}
 for k, v in groups.items():
     for item in groups[k]['nodes']:
         if item in freq:
             freq[item] += 1
+            node_key[item].append(k)
         else:
             freq[item] = 1
+            node_key[item] = []
+            node_key[item].append(k)
 
+# order descending by frequency
 sort_orders = sorted(freq.items(), key=lambda x: x[1], reverse=True)
 
+# print author list  with max number of keywords
 print("\nList of node that have max number of keywords:")
 cnt = 0
 max = sort_orders[000][0]
@@ -43,12 +64,13 @@ list_of_max = []
 for el in sort_orders:
     if el[1] == sort_orders[000][1]:
         list_of_max.append(el[0])
-    if el[1] > 1 and cnt < 10:
-        print("%s : %d" % (el[0], el[1]))
+    if el[1] > 1 and cnt < 15:
+        print("%s : %d - keys" % (el[0], el[1]), node_key[el[0]])
         cnt += 1
 
 start_time = time.time()
-### FINDNIG BEST CO-AUTHORSHIP
+
+# ----------- FINDING BEST CO-AUTHORSHIP ---------- #
 result_dict = {}
 coaut = {}
 i = 0
@@ -63,10 +85,13 @@ with open('result.csv', 'w') as res:
                 if dis is not None:
                     if pair[0] in list_of_max or pair[1] in list_of_max:
                         # if dis <= 2:
-                        result_dict[i] = {"keyword": k, "distance": dis, "aut1": pair[0], "name_aut1": g.author_dict[pair[0]]['author'], "aut2": pair[1], "name_aut2": g.author_dict[pair[1]]['author'],}
+                        result_dict[i] = {"keyword": k, "distance": dis, "aut1": pair[0],
+                                          "name_aut1": g.author_dict[pair[0]]['author'], "aut2": pair[1],
+                                          "name_aut2": g.author_dict[pair[1]]['author'], }
                         i += 1
                         # print(k+" -> dis:", dis, "- "+pair[0], g.author_dict[pair[0]]['author'], "- "+pair[1], g.author_dict[pair[1]]['author'])
-                    res.write("%s,%d,%s,%s,%s,%s\n" % (k, dis, pair[0], g.author_dict[pair[0]]['author'], pair[1], g.author_dict[pair[1]]['author']))
+                    res.write("%s,%d,%s,%s,%s,%s\n" % (
+                        k, dis, pair[0], g.author_dict[pair[0]]['author'], pair[1], g.author_dict[pair[1]]['author']))
             except:
                 pass
 
@@ -75,13 +100,15 @@ for dis in range(4):  # distance max
     for k, v in result_dict.items():
         if v['distance'] == dis:
             # print(v)
-            print(v["keyword"]+" -> dis:", v["distance"], "- "+v["aut1"], v["name_aut1"], "- "+v["aut2"], v["name_aut2"])
+            print(v["keyword"] + " -> dis:", v["distance"], "- " + v["aut1"], v["name_aut1"], "- " + v["aut2"],
+                  v["name_aut2"])
 
-print("----%f----" % (time.time()-start_time))
+print("----time elapse: %f----" % (time.time() - start_time))
 res.close()
 
-#### EXAMPLES insert keywords
+# ------------ EXAMPLES insert keywords ------------
 # Effects of Social Network Information on Online Language Learning Performance: A Cross-Continental Experiment
 # Game Theory, the Internet of Things and 5G Networks - Utilizing Game Theoretic Models to Characterize Challenging Scenarios
 # Analog IC Placement Generation via Neural Networks from Unlabeled Data
-
+# analogue gesture
+all_neighbors(g.G, "74/3810")

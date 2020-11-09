@@ -1,7 +1,7 @@
-# CoauthorshipGraph
+# Coauthorship Graph
 Expertise Finding on Coauthorship Graph
 
-### Progetto IA
+### Progetto Intelligent System
 Obiettivo del progetto e’ applicare le tecniche di navigazione semantica ad un grafo sociale di
 bibliografico (es. DBLP, GoogleScholar etc.) allo scopo di individuare gli autori che meglio
 rispecchiano un insieme di expertise date. Le expertise sono valutate stimando la distanza semantica
