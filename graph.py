@@ -97,7 +97,7 @@ def get_edges(data_json):
 
 # ------------ CREATE Keyword ------------
 def get_keywords(csv_file):
-    f = open('keywords.csv', 'w')
+    f = open('csv/keywords.csv', 'w')
     f.write("Node,Keyword\n")
     # Skip header
     next(csv_file)
@@ -115,7 +115,7 @@ def get_keywords(csv_file):
     f.close()
 
     keywords = {}
-    in_file = open('keywords.csv', 'r')
+    in_file = open('csv/keywords.csv', 'r')
     # Skip header
     next(in_file)
     seen = set()  # set for fast O(1) amortized lookup
@@ -147,7 +147,7 @@ for key, value in publ_dict.items():
 
 
 # CREATE CSV file with node id and label
-with open('nodes.csv', 'w') as f:
+with open('csv/nodes.csv', 'w') as f:
     f.write("Id,Label\n")
     for key, val in author_dict.items():
         f.write("%s,%s\n" % (val['aut_id'], val['author']))
@@ -156,7 +156,7 @@ with open('nodes.csv', 'w') as f:
 edges_dict = get_edges(data)
 
 # CREATE CSV file edges
-with open('edges.csv', 'w') as f:
+with open('csv/edges.csv', 'w') as f:
     f.write("Source,Target,Label,Publication_name\n")
     for key, val in edges_dict.items():
         f.write("%s,%s,%s,\"%s\"\n" % (val[0], val[1], val[2], val[3]))
@@ -168,7 +168,7 @@ for key, value in publ_dict.items():
 
 
 # CREATE CSV Publication
-with open('publication.csv', 'w') as f:
+with open('csv/publication.csv', 'w') as f:
     f.write("publ_id,title\n")
     for val in publication.values():
         f.write("%s,\"%s\"\n" % (val['publ_id'], val['title']))
@@ -193,7 +193,7 @@ for k, v in edges_dict.items():
 
 # ------------ KEYWORDS ------------
 # read csv, and split on "," the line
-edges_file = csv.reader(open('edges.csv', "r"), delimiter=",")
+edges_file = csv.reader(open('csv/edges.csv', "r"), delimiter=",")
 keywords_dict = get_keywords(edges_file)
 # add keywords to attribute node
 for i in range(len(keywords_dict)):

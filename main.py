@@ -70,7 +70,7 @@ list_of_max = []
 for el in sort_orders:
     if el[1] == sort_orders[000][1]:
         list_of_max.append(el[0])
-    if el[1] > 1: # and cnt < 15:
+    if el[1] > 1: # and cnt < 15: ############################################################
         print("%s : %d - keys" % (el[0], el[1]), node_key[el[0]])
         cnt += 1
 
@@ -81,7 +81,7 @@ result_dict = {}
 coaut = {}
 i = 0
 print("\nKEYWORD\tDISTANCE\tAUTHORS ")
-with open('result.csv', 'w') as res:
+with open('csv/result.csv', 'w') as res:
     res.write("keyword,distance,id_author1,author1,id_author2,author2\n")
     for k, v in groups.items():
         for pair in itertools.combinations(groups[k]['nodes'], 2):
