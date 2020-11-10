@@ -36,6 +36,12 @@ for k in keywords_input:
         my_list = find(k)
         my_list = list(dict.fromkeys(my_list))
         groups[k] = {'nodes': my_list}
+        for x in groups[k]["nodes"]:
+            node = []
+            for key in g.keywords_dict.values():
+                if key[1] == x:
+                    node.append(key[0])
+            groups[x] = {'nodes': node}
 
 for k, v in groups.items():
     print(k, groups[k])
@@ -64,7 +70,7 @@ list_of_max = []
 for el in sort_orders:
     if el[1] == sort_orders[000][1]:
         list_of_max.append(el[0])
-    if el[1] > 1 and cnt < 15:
+    if el[1] > 1: # and cnt < 15:
         print("%s : %d - keys" % (el[0], el[1]), node_key[el[0]])
         cnt += 1
 
@@ -110,5 +116,5 @@ res.close()
 # Effects of Social Network Information on Online Language Learning Performance: A Cross-Continental Experiment
 # Game Theory, the Internet of Things and 5G Networks - Utilizing Game Theoretic Models to Characterize Challenging Scenarios
 # Analog IC Placement Generation via Neural Networks from Unlabeled Data
-# analogue gesture
+# Analogue gesture
 all_neighbors(g.G, "74/3810")
