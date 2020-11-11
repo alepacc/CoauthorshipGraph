@@ -73,25 +73,10 @@ cnt = 0
 list_of_max = []
 for el in sort:
     if cnt < 200:
-        freq = len(el[1]) - 1
+        freq = len(el[1]) - 1  # number of keywords
         list_of_max.append(el[0])
         print("%s : %d" % (el[0], freq), el[1][0:freq], el[1][freq])
         cnt += 1
-# # order descending by frequency
-# sort_orders = sorted(freq.items(), key=lambda x: x[1], reverse=True)
-#
-# # print author list  with max number of keywords
-# print("\nList of node that have max number of keywords:")
-# cnt = 0
-# max = sort_orders[000][0]
-# list_of_max = []
-# for el in sort_orders:
-#     if el[1] == sort_orders[000][1]:
-#         list_of_max.append(el[0])
-#     if el[1] > 1:  # and cnt < 15:     #  el[1]>1 --> more of 1 keyword
-#
-#         print("%s : %d - keys" % (el[0], el[1]), node_key[el[0]])
-#         cnt += 1
 
 start_time = time.time()
 
@@ -108,19 +93,17 @@ with open('csv/result.csv', 'w') as res:
                 dis = g.distance(g.G, pair[0], pair[1])
                 if dis is not None:
                     if pair[0] in list_of_max or pair[1] in list_of_max:
-                        # if dis <= 2:
                         result_dict[i] = {"keyword": k, "distance": dis, "aut1": pair[0],
                                           "name_aut1": g.author_dict[pair[0]]['author'], "aut2": pair[1],
                                           "name_aut2": g.author_dict[pair[1]]['author'], }
                         i += 1
-                        # print(k+" -> dis:", dis, "- "+pair[0], g.author_dict[pair[0]]['author'], "- "+pair[1], g.author_dict[pair[1]]['author'])
                     res.write("%s,%d,%s,%s,%s,%s\n" % (
                         k, dis, pair[0], g.author_dict[pair[0]]['author'], pair[1], g.author_dict[pair[1]]['author']))
             except:
                 pass
 
 cnt = 0
-for dis in range(4):  # distance max
+for dis in range(4):  # distance max 3
     for k, v in result_dict.items():
         if v['distance'] == dis:
             cnt += 1
@@ -133,7 +116,6 @@ res.close()
 
 # ------------ EXAMPLES of input keyword ------------
 # Effects of Social Network Information on Online Language Learning Performance: A Cross-Continental Experiment
-# Game Theory, the Internet of Things and 5G Networks - Utilizing Game Theoretic Models to Characterize Challenging Scenarios
 # Analog IC Placement Generation via Neural Networks from Unlabeled Data
 # Analogue gesture
 
