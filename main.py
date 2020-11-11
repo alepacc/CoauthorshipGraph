@@ -67,7 +67,7 @@ for k, v in node_key.items():
     v.append(count)
 
 # print author list w/ number of occurrence
-print("\nList of node that have max number of keywords:\n NODE\t\tKEYWORD\t\t\tSUM OCCURRENCE")
+print("\nList of node with keywords and occurrence:\n NODE\t\t\tKEYWORD\t\t\tSUM OCCURRENCE")
 sort = sorted(node_key.items(), key=lambda e: e[1][len(e[1])-1], reverse=True)
 cnt = 0
 list_of_max = []
@@ -75,7 +75,7 @@ for el in sort:
     if cnt < 200:
         freq = len(el[1]) - 1  # number of keywords
         list_of_max.append(el[0])
-        print("%s : %d" % (el[0], freq), el[1][0:freq], el[1][freq])
+        print("%s %s: %d" % (el[0], g.author_dict[el[0]]['author'], freq), el[1][0:freq], el[1][freq])
         cnt += 1
 
 start_time = time.time()
