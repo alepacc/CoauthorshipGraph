@@ -96,38 +96,27 @@ def get_edges(data_json):
 
 
 # ------------ CREATE Keyword ------------
-def get_keywords(csv_file):
-    f = open('csv/keywords.csv', 'w')
-    f.write("Node,Keyword\n")
-    # Skip header
-    next(csv_file)
-    # loop through csv list
-    for row in csv_file:
-        # same node
-        if row[0] == row[1]:
-            result = re.findall('(?!from|with)[A-Z][a-z][a-z][a-z]+', row[3], re.IGNORECASE)
-            for r in result:
-                f.write("%s,%s\n" % (row[0], r))
-        else:  # two node (source, target)
-            result = re.findall('(?!from|with)[A-Z][a-z][a-z][a-z]+', row[3], re.IGNORECASE)
-            for r in result:
-                f.write("%s,%s\n%s,%s\n" % (row[0], r, row[1], r))
-    f.close()
-
+def get_keywords(repetition=True):
     keywords = {}
     in_file = open('csv/keywords.csv', 'r')
     # Skip header
     next(in_file)
-    seen = set()  # set for fast O(1) amortized lookup
     i = 0
-    for row in in_file:
-        if row in seen:
-            continue   # skip duplicate
-        else:
-            seen.add(row)
+    if repetition:
+        for row in in_file:
             x = row.strip().split(",")
             keywords[i] = x[0], x[1]
             i += 1
+    else:
+        seen = set()  # set for fast O(1) amortized lookup
+        for row in in_file:
+            if row in seen:
+                continue   # skip duplicate
+            else:
+                seen.add(row)
+                x = row.strip().split(",")
+                keywords[i] = x[0], x[1]
+                i += 1
     in_file.close()
 
     return keywords
@@ -194,23 +183,53 @@ for k, v in edges_dict.items():
 # ------------ KEYWORDS ------------
 # read csv, and split on "," the line
 edges_file = csv.reader(open('csv/edges.csv', "r"), delimiter=",")
-keywords_dict = get_keywords(edges_file)
+f = open('csv/keywords.csv', 'w')
+f.write("Node,Keyword\n")
+# Skip header
+next(edges_file)
+# loop through csv list
+for row in edges_file:
+    # same node
+    if row[0] == row[1]:
+        result = re.findall('(?!from|with)[A-Z][a-z][a-z][a-z]+', row[3], re.IGNORECASE)
+        for r in result:
+            f.write("%s,%s\n" % (row[0], r))
+    else:  # two node (source, target)
+        result = re.findall('(?!from|with)[A-Z][a-z][a-z][a-z]+', row[3], re.IGNORECASE)
+        for r in result:
+            f.write("%s,%s\n%s,%s\n" % (row[0], r, row[1], r))
+f.close()
+
+keywords_dict = get_keywords()
 # add keywords to attribute node
 for i in range(len(keywords_dict)):
     try:
-        G.nodes[keywords_dict[i][0]][keywords_dict[i][1]] = keywords_dict[i][1]
-        # attribute_dict = G.nodes.data()
-        # a = attribute_dict[keywords_dict[i][0]]
-        # if keywords_dict[i][1] in a:
-        #     G.nodes[keywords_dict[i][0]][keywords_dict[i][1]] = 2
-        # else:
-        #     G.nodes[keywords_dict[i][0]][keywords_dict[i][1]] = 1
+        # G.nodes[keywords_dict[i][0]][keywords_dict[i][1]] = keywords_dict[i][1]
+        attribute_dict = G.nodes.data()
+        # if keywords_dict[i][1] not in a.keys():
+        if keywords_dict[i][1] not in G.nodes[keywords_dict[i][0]]:
+            G.nodes[keywords_dict[i][0]][keywords_dict[i][1]] = 1
+        else:  # count occurrences of keywords
+            occurrence = G.nodes[keywords_dict[i][0]][keywords_dict[i][1]]
+            G.nodes[keywords_dict[i][0]][keywords_dict[i][1]] = occurrence + 1
     except:
         pass
 
+# ------------ betweenness, closeness, degree  ------------
+# betweenness = nx.betweenness_centrality(G)
+# closeness = nx.closeness_centrality(G)
+# degree = nx.degree(G)
+# betwn_val = []
+# for k in betweenness.keys():
+#     betwn_val.append(betweenness[k])
+# plt.title('betweenness')
+# plt.hist(betwn_val)
+# plt.ylabel('Frequency')
+# plt.xlabel('Value')
+# plt.show()
+
+
 print("\n" + nx.info(G) + "\n")
-
-
 
 # ------------ Drawing graph with NetworkX ------------
 # print("drawing.......")
@@ -220,3 +239,4 @@ print("\n" + nx.info(G) + "\n")
 # nx.draw(G, pos, node_size=20, alpha=0.4, node_color=range(2945), with_labels=False)
 # plt.axis("equal")
 # plt.show()
+

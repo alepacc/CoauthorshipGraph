@@ -1,8 +1,7 @@
 import time
 import re
 import itertools
-
-from networkx import all_neighbors
+import networkx as nx
 from nltk.corpus import wordnet
 
 import graph as g
@@ -12,7 +11,7 @@ def find(word):
     synonyms = []
     for syn in wordnet.synsets(word):
         for l in syn.lemmas():
-            synonyms.append(l.name())
+            synonyms.append(l.name().capitalize())
     # print(set(synonyms))
     return synonyms
 
@@ -24,25 +23,27 @@ keywords_input = re.findall('(?!from|with)[A-Z][a-z][a-z][a-z]+', keys, re.IGNOR
 
 print("keywors->", keywords_input, "\n")
 
+key_dict = g.get_keywords(False)
 # groups of nodes for each keywords
 groups = {}
 for k in keywords_input:
     node = []
-    for key in g.keywords_dict.values():
+    for key in key_dict.values():
         if key[1] == k:
             node.append(key[0])
     groups[k] = {'nodes': node}
-    if not groups[k]['nodes']:
+    if not groups[k]['nodes']:  # keyword synonyms
         my_list = find(k)
         my_list = list(dict.fromkeys(my_list))
         groups[k] = {'nodes': my_list}
         for x in groups[k]["nodes"]:
             node = []
-            for key in g.keywords_dict.values():
+            for key in key_dict.values():
                 if key[1] == x:
                     node.append(key[0])
             groups[x] = {'nodes': node}
 
+# print input keywords found
 for k, v in groups.items():
     print(k, groups[k])
 
@@ -53,26 +54,45 @@ for k, v in groups.items():
     for item in groups[k]['nodes']:
         if item in freq:
             freq[item] += 1
-            node_key[item].append(k)
+            node_key[item].append({k: g.G.nodes[item][k]})  # keyword w/ occurrence
         else:
             freq[item] = 1
             node_key[item] = []
-            node_key[item].append(k)
+            node_key[item].append({k: g.G.nodes[item][k]})
 
-# order descending by frequency
-sort_orders = sorted(freq.items(), key=lambda x: x[1], reverse=True)
+for k, v in node_key.items():
+    count = 0
+    for i in range(len(v)):
+        for value in v[i].values():
+            count += value
+    v.append(count)
 
-# print author list  with max number of keywords
-print("\nList of node that have max number of keywords:")
+# print author list w/ number of occurrence
+print("\nList of node that have max number of keywords:\n NODE\t\tKEYWORD\t\t\tSUM OCCURRENCE")
+sort = sorted(node_key.items(), key=lambda e: e[1][len(e[1])-1], reverse=True)
 cnt = 0
-max = sort_orders[000][0]
 list_of_max = []
-for el in sort_orders:
-    if el[1] == sort_orders[000][1]:
+for el in sort:
+    if cnt < 200:
+        freq = len(el[1]) - 1
         list_of_max.append(el[0])
-    if el[1] > 1: # and cnt < 15: ############################################################
-        print("%s : %d - keys" % (el[0], el[1]), node_key[el[0]])
+        print("%s : %d" % (el[0], freq), el[1][0:freq], el[1][freq])
         cnt += 1
+# # order descending by frequency
+# sort_orders = sorted(freq.items(), key=lambda x: x[1], reverse=True)
+#
+# # print author list  with max number of keywords
+# print("\nList of node that have max number of keywords:")
+# cnt = 0
+# max = sort_orders[000][0]
+# list_of_max = []
+# for el in sort_orders:
+#     if el[1] == sort_orders[000][1]:
+#         list_of_max.append(el[0])
+#     if el[1] > 1:  # and cnt < 15:     #  el[1]>1 --> more of 1 keyword
+#
+#         print("%s : %d - keys" % (el[0], el[1]), node_key[el[0]])
+#         cnt += 1
 
 start_time = time.time()
 
@@ -101,13 +121,14 @@ with open('csv/result.csv', 'w') as res:
             except:
                 pass
 
-print("Find keywords in result.csv")
+cnt = 0
 for dis in range(4):  # distance max
     for k, v in result_dict.items():
         if v['distance'] == dis:
-            # print(v)
-            print(v["keyword"] + " -> dis:", v["distance"], "- " + v["aut1"], v["name_aut1"], "- " + v["aut2"],
-                  v["name_aut2"])
+            cnt += 1
+            if cnt < 20:
+                print(v["keyword"] + " -> dis:", v["distance"], "- " + v["aut1"], v["name_aut1"], "- " + v["aut2"], v["name_aut2"])
+print(".....Find all in result.csv")
 
 print("----time elapse: %f----" % (time.time() - start_time))
 res.close()
@@ -117,4 +138,4 @@ res.close()
 # Game Theory, the Internet of Things and 5G Networks - Utilizing Game Theoretic Models to Characterize Challenging Scenarios
 # Analog IC Placement Generation via Neural Networks from Unlabeled Data
 # Analogue gesture
-all_neighbors(g.G, "74/3810")
+
