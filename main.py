@@ -1,7 +1,6 @@
 import time
 import re
 import itertools
-import networkx as nx
 from nltk.corpus import wordnet
 
 import graph as g
@@ -107,7 +106,6 @@ with open('csv/result.csv', 'w') as res:
         for pair in itertools.combinations(groups[k]['nodes'], 2):
             try:
                 dis = g.distance(g.G, pair[0], pair[1])
-                # dis = nx.dijkstra_path_length(g.G, pair[0], pair[1])
                 if dis is not None:
                     if pair[0] in list_of_max or pair[1] in list_of_max:
                         # if dis <= 2:
@@ -133,7 +131,7 @@ print(".....Find all in result.csv")
 print("----time elapse: %f----" % (time.time() - start_time))
 res.close()
 
-# ------------ EXAMPLES insert keywords ------------
+# ------------ EXAMPLES of input keyword ------------
 # Effects of Social Network Information on Online Language Learning Performance: A Cross-Continental Experiment
 # Game Theory, the Internet of Things and 5G Networks - Utilizing Game Theoretic Models to Characterize Challenging Scenarios
 # Analog IC Placement Generation via Neural Networks from Unlabeled Data
